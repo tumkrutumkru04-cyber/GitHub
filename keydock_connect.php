@@ -26,24 +26,26 @@ if (isset($keys[$key_name])) {
         exit;
     }
     
-    // Check device limit
-    if ($key_data['devices_used'] >= $key_data['max_devices']) {
-        echo json_encode(["ok" => false, "error" => "Device limit reached"], JSON_PRETTY_PRINT);
-        exit;
-    }
-    
-    // Assign device if not already used
+    // --- DEVICE CHECK LOGIC ---
+    // If key has no device assigned yet → assign this device
     if ($key_data['device_id'] === null) {
         $key_data['device_id'] = $device_id;
         $key_data['devices_used'] = 1;
         $keys[$key_name] = $key_data;
         file_put_contents($store_file, json_encode($keys, JSON_PRETTY_PRINT));
-    } elseif ($key_data['device_id'] !== $device_id) {
-        echo json_encode(["ok" => false, "error" => "Device mismatch"], JSON_PRETTY_PRINT);
+    } 
+    // If key has same device → ALLOW (no block)
+    elseif ($key_data['device_id'] === $device_id) {
+        // Same device, allow access
+        // Do nothing, just proceed
+    } 
+    // If key has different device → BLOCK
+    else {
+        echo json_encode(["ok" => false, "error" => "Device mismatch! This key is already used on another device."], JSON_PRETTY_PRINT);
         exit;
     }
     
-    // Calculate remaining time in IST
+    // Calculate remaining time
     $now = time();
     $expiry = $key_data['expiry_timestamp'] / 1000;
     $remaining = max(0, $expiry - $now);
@@ -56,8 +58,8 @@ if (isset($keys[$key_name])) {
         "status" => true,
         "Status" => "active",
         "DeviceLimit" => $key_data['max_devices'],
-        "Devices" => $key_data['device_id'] ?: $device_id,
-        "device_id" => $key_data['device_id'] ?: $device_id,
+        "Devices" => $key_data['device_id'],
+        "device_id" => $key_data['device_id'],
         "devices_used" => $key_data['devices_used'],
         "max_devices" => $key_data['max_devices'],
         "Expiry" => $key_data['expiry_timestamp'],
