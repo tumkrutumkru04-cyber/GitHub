@@ -1,31 +1,27 @@
 <?php
 header('Content-Type: application/json');
 
-// Store file
+// Set timezone to IST (India)
+date_default_timezone_set('Asia/Kolkata');
+
 $store_file = 'keys.json';
 
-// Generate new key
 function generateKey() {
-    $prefix = "HEX-CHATS-MOCO-";
+    $prefix = "PIYUSH-HACKS-";
     $random = strtoupper(bin2hex(random_bytes(4))); // 8 chars
     return $prefix . $random;
 }
 
-// Get or create key
 $action = $_GET['action'] ?? $_POST['action'] ?? 'generate';
-$key = $_GET['key'] ?? $_POST['key'] ?? '';
-$device_id = $_GET['device_id'] ?? $_POST['device_id'] ?? '';
 
-// Load existing keys
 $keys = [];
 if (file_exists($store_file)) {
     $keys = json_decode(file_get_contents($store_file), true) ?? [];
 }
 
 if ($action === 'generate') {
-    // Create new key
     $new_key = generateKey();
-    $expiry = time() + (5 * 3600);
+    $expiry = time() + (5 * 3600); // 5 hours from now in IST
     
     $keys[$new_key] = [
         "key" => $new_key,
@@ -50,7 +46,6 @@ if ($action === 'generate') {
     ], JSON_PRETTY_PRINT);
     
 } elseif ($action === 'list') {
-    // List all keys
     $list = [];
     foreach ($keys as $k => $data) {
         $list[] = [
