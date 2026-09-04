@@ -1,6 +1,9 @@
 <?php
 header('Content-Type: application/json');
 
+// Set timezone to IST (India)
+date_default_timezone_set('Asia/Kolkata');
+
 $key_name = $_GET['key_name'] ?? $_POST['key_name'] ?? '';
 $device_id = $_GET['device_id'] ?? $_POST['device_id'] ?? 'android-test';
 $nonce = $_GET['nonce'] ?? $_POST['nonce'] ?? 'jitu-app';
@@ -40,6 +43,13 @@ if (isset($keys[$key_name])) {
         exit;
     }
     
+    // Calculate remaining time in IST
+    $now = time();
+    $expiry = $key_data['expiry_timestamp'] / 1000;
+    $remaining = max(0, $expiry - $now);
+    $remaining_hours = floor($remaining / 3600);
+    $remaining_minutes = floor(($remaining % 3600) / 60);
+    
     // Return success
     $response = [
         "ok" => true,
@@ -56,10 +66,10 @@ if (isset($keys[$key_name])) {
         "state" => "active",
         "cheat" => null,
         "seller" => "",
-        "validity" => $key_data['validity'],
-        "expires_at" => $key_data['expires_at'],
-        "remaining_seconds" => max(0, ($key_data['expiry_timestamp'] - time() * 1000) / 1000),
-        "remaining" => "5h 0m",
+        "validity" => "5 Hours",
+        "expires_at" => date('Y-m-d H:i:s', $expiry),
+        "remaining_seconds" => $remaining,
+        "remaining" => $remaining_hours . "h " . $remaining_minutes . "m",
         "hmac" => hash('sha256', $key_name . $nonce . 'jitu-secret'),
         "nonce" => $nonce
     ];
