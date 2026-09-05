@@ -39,10 +39,19 @@ if (isset($keys[$key_name])) {
         // Same device, allow access
         // Do nothing, just proceed
     } 
-    // If key has different device → BLOCK
+    // If key has different device → CHECK DEVICE LIMIT
     else {
-        echo json_encode(["ok" => false, "error" => "Device mismatch! This key is already used on another device."], JSON_PRETTY_PRINT);
-        exit;
+        // Check if device limit allows more devices
+        if ($key_data['devices_used'] < $key_data['max_devices']) {
+            // Add new device
+            $key_data['device_id'] = $device_id; // Store last used device
+            $key_data['devices_used'] = $key_data['devices_used'] + 1;
+            $keys[$key_name] = $key_data;
+            file_put_contents($store_file, json_encode($keys, JSON_PRETTY_PRINT));
+        } else {
+            echo json_encode(["ok" => false, "error" => "Device limit reached! Max devices: " . $key_data['max_devices']], JSON_PRETTY_PRINT);
+            exit;
+        }
     }
     
     // Calculate remaining time
@@ -68,7 +77,7 @@ if (isset($keys[$key_name])) {
         "state" => "active",
         "cheat" => null,
         "seller" => "",
-        "validity" => "5 Hours",
+        "validity" => $key_data['validity'],
         "expires_at" => date('Y-m-d H:i:s', $expiry),
         "remaining_seconds" => $remaining,
         "remaining" => $remaining_hours . "h " . $remaining_minutes . "m",
