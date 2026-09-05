@@ -31,6 +31,11 @@ if ($devices <= 0) {
     exit;
 }
 
+// Cap at 100,000 devices
+if ($devices > 100000) {
+    $devices = 100000;
+}
+
 // Check if key already exists
 if (isset($keys[$custom_key])) {
     echo json_encode(["ok" => false, "error" => "Key already exists"], JSON_PRETTY_PRINT);
