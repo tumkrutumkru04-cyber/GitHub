@@ -21,7 +21,11 @@ if (file_exists($store_file)) {
 
 if ($action === 'generate') {
     $new_key = generateKey();
-    $expiry = time() + (5 * 3600);
+    
+    // Fixed 10 hours
+    $hours = 10;
+    $expiry = time() + ($hours * 3600);
+    $validity_text = $hours . " Hours";
     
     $keys[$new_key] = [
         "key" => $new_key,
@@ -31,7 +35,7 @@ if ($action === 'generate') {
         "created_at" => date('Y-m-d H:i:s'),
         "expires_at" => date('Y-m-d H:i:s', $expiry),
         "expiry_timestamp" => $expiry * 1000,
-        "validity" => "5 Hours",
+        "validity" => $validity_text,
         "status" => "active"
     ];
     
@@ -40,9 +44,10 @@ if ($action === 'generate') {
     echo json_encode([
         "ok" => true,
         "key" => $new_key,
-        "validity" => "5 Hours",
+        "validity" => $validity_text,
         "expires_at" => date('Y-m-d H:i:s', $expiry),
-        "max_devices" => 1
+        "max_devices" => 1,
+        "hours" => $hours
     ], JSON_PRETTY_PRINT);
     
 } elseif ($action === 'list') {
@@ -52,6 +57,8 @@ if ($action === 'generate') {
             "key" => $k,
             "status" => $data['status'] ?? 'active',
             "devices_used" => $data['devices_used'] ?? 0,
+            "max_devices" => $data['max_devices'] ?? 1,
+            "validity" => $data['validity'] ?? 'N/A',
             "expires_at" => $data['expires_at'] ?? 'N/A'
         ];
     }
